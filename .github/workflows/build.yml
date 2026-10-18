@@ -7,18 +7,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Unzip project
         run: |
-          unzip -o SitambukProject-Android-Project.zip -d .
-          ls -la
-          # Cari dimana gradlew ngumpet
-          FOUND=$(find . -name "gradlew" -type f | head -n 1)
-          echo "Found gradlew at: $FOUND"
+          rm -rf app gradle build.gradle.kts settings.gradle.kts gradle.properties || true
+          unzip -o SitambukProject-Android-Project.zip -d temp_extract
+          FOUND=$(find temp_extract -name "gradlew" -type f | head -n 1)
+          echo "Found: $FOUND"
           DIR=$(dirname "$FOUND")
-          echo "Project folder: $DIR"
-          # Pindahin semua isi ke root
+          echo "Dir: $DIR"
           cp -r $DIR/* .
           cp -r $DIR/.* . 2>/dev/null || true
-          rm -rf SitambukProject-Android-Project
-          rm -f *.zip
+          rm -rf temp_extract *.zip
           ls -la
       - uses: actions/setup-java@v4
         with:
