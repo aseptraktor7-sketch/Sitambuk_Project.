@@ -10,12 +10,20 @@ jobs:
           rm -rf app gradle temp_extract || true
           mkdir temp_extract
           unzip -o SitambukProject-Android-Project.zip -d temp_extract
-          PROJECT_DIR=$(find temp_extract -name "gradlew" -type f | head -n 1 | xargs dirname)
-          echo "Project dir: $PROJECT_DIR"
+          echo "=== ISI TEMP ==="
+          ls temp_extract
+          echo "=== CARI GRADLEW ==="
+          find temp_extract -name "gradlew" -type f
+          PROJECT_DIR=$(find temp_extract -name "gradlew" -type f -exec dirname {} \; | head -n 1)
           if [ -z "$PROJECT_DIR" ]; then
-            PROJECT_DIR=$(find temp_extract -type d | head -n 2 | tail -n 1)
+            echo "Gradlew not found, pakai temp_extract langsung"
+            PROJECT_DIR="temp_extract"
+            # cek apakah ada subfolder
+            if [ -d "temp_extract/SitambukProject-Android-Project" ]; then
+              PROJECT_DIR="temp_extract/SitambukProject-Android-Project"
+            fi
           fi
-          echo "Copy from $PROJECT_DIR"
+          echo "COPY FROM: $PROJECT_DIR"
           cp -rf $PROJECT_DIR/. .
           rm -rf temp_extract *.zip
           ls -la
