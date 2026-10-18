@@ -7,29 +7,37 @@ jobs:
       - uses: actions/checkout@v4
       - name: Unzip project
         run: |
-          rm -rf app gradle temp_extract || true
-          mkdir temp_extract
-          unzip -o SitambukProject-Android-Project.zip -d temp_extract
-          ls -R temp_extract | head -n 100
+          rm -rf app gradle || true
+          rm -rf temp_extract || true
+          unzip -o SitambukProject-Android-Project.zip -d .
+          ls -la
+          # cari folder yang ada app
+          PROJECT_DIR=$(find . -maxdepth 3 -type d -name "app" | head -n 1 | xargs dirname)
+          if [ -z "$PROJECT_DIR" ]; then PROJECT_DIR="."; fi
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Project di: $PROJECT_DIR"
+          ls -la $PROJECT_DIR
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+      - uses: gradle/actions/setup-gradle@v3
       - name: Build APK
         run: |
-          PROJECT_DIR=$(find temp_extract -name "gradlew" -type f -exec dirname {} \; | head -n 1)
-          if [ -z "$PROJECT_DIR" ]; then
-            PROJECT_DIR=$(find . -name "gradlew" -type f -exec dirname {} \; | head -n 1)
+          echo "Build di: ${{ env.PROJECT_DIR }}"
+          cd ${{ env.PROJECT_DIR }}
+          ls -la
+          # kalau ada gradlew pakai itu, kalau gak ada pakai gradle langsung
+          if [ -f "./gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            echo "gradlew gak ada, pakai gradle langsung"
+            gradle assembleDebug
           fi
-          echo "Build di folder: $PROJECT_DIR"
-          ls -la $PROJECT_DIR
-          cd $PROJECT_DIR
-          chmod +x gradlew
-          ./gradlew assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Sitambuk-APK
           path: |
             **/app/build/outputs/apk/debug/*.apk
-            temp_extract/**/app/build/outputs/apk/debug/*.apk
