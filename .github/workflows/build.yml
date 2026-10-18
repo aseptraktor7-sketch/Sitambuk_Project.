@@ -10,32 +10,26 @@ jobs:
           rm -rf app gradle temp_extract || true
           mkdir temp_extract
           unzip -o SitambukProject-Android-Project.zip -d temp_extract
-          echo "=== ISI TEMP ==="
-          ls temp_extract
-          echo "=== CARI GRADLEW ==="
-          find temp_extract -name "gradlew" -type f
-          PROJECT_DIR=$(find temp_extract -name "gradlew" -type f -exec dirname {} \; | head -n 1)
-          if [ -z "$PROJECT_DIR" ]; then
-            echo "Gradlew not found, pakai temp_extract langsung"
-            PROJECT_DIR="temp_extract"
-            # cek apakah ada subfolder
-            if [ -d "temp_extract/SitambukProject-Android-Project" ]; then
-              PROJECT_DIR="temp_extract/SitambukProject-Android-Project"
-            fi
-          fi
-          echo "COPY FROM: $PROJECT_DIR"
-          cp -rf $PROJECT_DIR/. .
-          rm -rf temp_extract *.zip
-          ls -la
+          ls -R temp_extract | head -n 100
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
       - name: Build APK
         run: |
+          PROJECT_DIR=$(find temp_extract -name "gradlew" -type f -exec dirname {} \; | head -n 1)
+          if [ -z "$PROJECT_DIR" ]; then
+            PROJECT_DIR=$(find . -name "gradlew" -type f -exec dirname {} \; | head -n 1)
+          fi
+          echo "Build di folder: $PROJECT_DIR"
+          ls -la $PROJECT_DIR
+          cd $PROJECT_DIR
           chmod +x gradlew
           ./gradlew assembleDebug
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: Sitambuk-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: |
+            **/app/build/outputs/apk/debug/*.apk
+            temp_extract/**/app/build/outputs/apk/debug/*.apk
